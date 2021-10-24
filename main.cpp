@@ -54,7 +54,7 @@ int main() {
   //Elsa_ defined variables
   int lane = 1; //starting on lane 1
   //Have a reference velocity to target
-  double ref_vel = 49.5;
+  double ref_vel = 0.0;
   
 
   h.onMessage([&ref_vel, &map_waypoints_x,&map_waypoints_y,&map_waypoints_s,&map_waypoints_dx,&map_waypoints_dy,&lane]
@@ -104,6 +104,46 @@ int main() {
            * TODO: define a path made up of (x,y) points that the car will visit
            *   sequentially every .02 seconds
            */
+          
+                   if(prev_size > 0)
+         {
+           car_s = end_path_s;
+         }
+         
+         bool too_close = false;
+          
+          //find ref_v to use
+         for(int i=0; i<sensor_fusion.size(); ++i){
+         	//car is in my lane
+           float d = sensor_fusion[i][6];
+           if(d < (2+4*lane+2) && d > (2+4*lane-2))
+           {
+             double vx = sensor_fusion[i][3];
+             double vy = sensor_fusion[i][4];
+             double check_speed = sqrt(vx*vx + vy*vy);
+             double check_car_s = sensor_fusion[i][5];
+             
+             check_car_s += (double)prev_size* 0.02*check_speed; //if using previous points can project s value out
+             //check s values greater than mine and s gap
+             if((check_car_s > car_s) && (check_car_s - car_s < 30))
+             {
+             	//do some logic here, lower reference velocity so we dont crash into the car infrot of us
+               // also flag to try to change lanes
+               //ref_vel = 29.5; //mph
+               too_close=true;
+             }
+           }
+         }
+          
+         if (too_close)
+          {
+          	ref_vel -= 0.224;
+            if (ref_vel<0) {ref_vel=0;}
+          }
+          else if (ref_vel <49.5){
+          	ref_vel += 0.224;
+          }
+          
           // create a lit of widely spaced (x,y) maypoints, evenly spaced at 30m
           vector<double> ptsx;
           vector<double> ptsy;
@@ -187,7 +227,7 @@ int main() {
           double target_y = s(target_x);
           double target_dist = sqrt((target_x)*(target_x) + (target_y)*(target_y));
           
-          double x_add_on = 0;
+          double x_add_on = 0.0;
           
           //fill up the rest of our path planner after filling it with previos points, here we will always output 50 points
           for (int i =1; i<= 50 - previous_path_x.size(); ++i){
