@@ -131,6 +131,9 @@ int main() {
                // also flag to try to change lanes
                //ref_vel = 29.5; //mph
                too_close=true;
+               if (lane > 0){
+               	lane = 0;
+               }
              }
            }
          }
@@ -230,6 +233,7 @@ int main() {
           double x_add_on = 0.0;
           
           //fill up the rest of our path planner after filling it with previos points, here we will always output 50 points
+          //Elsa: here change of acceleration can also be written. Here woud be better
           for (int i =1; i<= 50 - previous_path_x.size(); ++i){
           	double N = target_dist
              /(0.02*ref_vel/2.24);
