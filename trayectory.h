@@ -7,22 +7,29 @@
 #include <string>
 #include <vector>
 #include "spline.h"
+#include "points.h"
 
 using std::vector;
 
-vector < vector<double> >  generateTrayectory(int lane, double ref_vel, Car car, vector<double> previous_path_x, vector<double> previous_path_y, double end_path_s, double end_path_d, double prev_size, Map map ){
+Points generateTrayectory(int lane, double ref_vel, Car car, Points previous_path, double end_path_s, double end_path_d, double prev_size, Map map ){
 
 	// create a list of widely spaced (x,y) waypoints, evenly spaced at 30m
+  
     vector<double> ptsx;
     vector<double> ptsy;
     // reference x,y, yaw states 
     double ref_x = car.x;
     double ref_y = car.y;
     double ref_yaw = deg2rad(car.yaw);
+  
+  	//1. get first points
+  	//get2FirstPoints(ptsx, ptsy, car, prev_size, previous_path_x, previous_path_y);
+  
     //if previous list is almost empty, use the car as starting reference
     if(prev_size<2)
     {
       //Use two points that make the path tangent to the car
+      // get2PointsFromCar(car, ptsx, ptsy);
       double prev_car_x =  car.x - cos(car.yaw);
       double prev_car_y = car.y - sin(car.yaw);
 
@@ -35,12 +42,13 @@ vector < vector<double> >  generateTrayectory(int lane, double ref_vel, Car car,
     //use the previous paths and point as starting reference
     else
     {
+      //get2PointsFromPath(previous_path_x, previous_path_x, ref_x, ref_y, ref_yaw, ptsx, ptsy);
       //redefine reference state as previous path and point
-      ref_x = previous_path_x[prev_size - 1];
-      ref_y = previous_path_y[prev_size - 1];
+      ref_x = previous_path.x[prev_size - 1];
+      ref_y = previous_path.y[prev_size - 1];
 
-      double ref_x_prev = previous_path_x[prev_size - 2];
-      double ref_y_prev = previous_path_y[prev_size - 2];
+      double ref_x_prev = previous_path.x[prev_size - 2];
+      double ref_y_prev = previous_path.y[prev_size - 2];
       ref_yaw = atan2(ref_y - ref_y_prev, ref_x - ref_x_prev);
 
       //Use two points that make the path tangen to the previous path's end point
@@ -51,6 +59,7 @@ vector < vector<double> >  generateTrayectory(int lane, double ref_vel, Car car,
       ptsy.push_back(ref_y);
     }
 
+  	//getLastPoint(car, lane, map, ptsx, ptsy);
     //In Frenet add evenly 30m spaced points ahead of the starting reference
     vector<double> next_wp0 = getXY(car.s+30, (2+4*lane), map.waypoints_s, map.waypoints_x,          map.waypoints_y);
     vector<double> next_wp1 = getXY(car.s+60, (2+4*lane), map.waypoints_s, map.waypoints_x,          map.waypoints_y);
@@ -64,6 +73,7 @@ vector < vector<double> >  generateTrayectory(int lane, double ref_vel, Car car,
     ptsy.push_back(next_wp1[1]);
     ptsy.push_back(next_wp2[1]);
 
+  	//changePointsOrientation(ref_x, ref_y, ref_yaw, ptsx, ptsy);
     for (int i = 0; i < ptsx.size(); ++i) {
 
       //shift car reference angle to 0 degree
@@ -81,13 +91,12 @@ vector < vector<double> >  generateTrayectory(int lane, double ref_vel, Car car,
     s.set_points(ptsx, ptsy);
 
     //Define the actual(x,y) points we will use for the planner
-    vector<double> next_x_vals;
-    vector<double> next_y_vals;
+    Points next_vals;
 
     //Start with all of the previous path points from last time
-    for(int i=0; i<previous_path_x.size(); ++i){
-      next_x_vals.push_back(previous_path_x[i]);
-      next_y_vals.push_back(previous_path_y[i]);
+    for(int i=0; i<previous_path.x.size(); ++i){
+      next_vals.x.push_back(previous_path.x[i]);
+      next_vals.y.push_back(previous_path.y[i]);
     }
 
     //Calculate how to brak up splice points so that we traver at our desired reference velocity
@@ -99,7 +108,7 @@ vector < vector<double> >  generateTrayectory(int lane, double ref_vel, Car car,
 
     //fill up the rest of our path planner after filling it with previos points, here we will always output 50 points
     //Elsa: here change of acceleration can also be written. Here woud be better
-    for (int i =1; i<= 50 - previous_path_x.size(); ++i){
+    for (int i =1; i<= 50 - previous_path.x.size(); ++i){
       double N = target_dist
         /(0.02*ref_vel/2.24);
       double x_point = x_add_on + target_x/N;
@@ -116,15 +125,15 @@ vector < vector<double> >  generateTrayectory(int lane, double ref_vel, Car car,
       x_point += ref_x;
       y_point += ref_y;
 
-      next_x_vals.push_back(x_point);
-      next_y_vals.push_back(y_point);
+      next_vals.x.push_back(x_point);
+      next_vals.y.push_back(y_point);
     }
   
-  vector < vector<double> > next_points;
-  next_points.push_back(next_x_vals);
-  next_points.push_back(next_y_vals);
+ // vector < vector<double> > next_points;
+  //next_points.push_back(next_vals.x);
+  //next_points.push_back(next_vals.y);
   
-  return next_points;
+  return next_vals;
 }
 
 

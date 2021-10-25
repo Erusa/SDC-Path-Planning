@@ -7,6 +7,7 @@
 #include "Eigen-3.3/Eigen/QR"
 #include "helpers.h"
 #include "trayectory.h"
+//#include "points.h"
 #include "planning.h"
 #include "car.h"
 #include "map.h"
@@ -85,8 +86,14 @@ int main() {
           egoCar.speed = j[1]["speed"];
 
           // Previous path data given to the Planner
+          Points previous_path;
           auto previous_path_x = j[1]["previous_path_x"];
           auto previous_path_y = j[1]["previous_path_y"];
+          vector <double> previous_path_x_vector = previous_path_x;
+          vector <double> previous_path_y_vector = previous_path_y;
+          previous_path.x = previous_path_x_vector;
+          previous_path.y = previous_path_y_vector;
+          
           // Previous path's end s and d values 
           double end_path_s = j[1]["end_path_s"];
           double end_path_d = j[1]["end_path_d"];
@@ -96,7 +103,7 @@ int main() {
           auto sensor_fusion = j[1]["sensor_fusion"];
           
           //Elsa:help to do transitions
-          int prev_size = previous_path_x.size();
+          int prev_size = previous_path.x.size();
 
           json msgJson;
 
@@ -109,13 +116,12 @@ int main() {
           planAction(prev_size, sensor_fusion, egoCar, end_path_s, ref_vel, lane);
           
           //Define the actual(x,y) points we will use for the planner
-          vector < vector<double> > next_points;
+          Points next_vals;
+          next_vals = generateTrayectory(lane, ref_vel, egoCar, previous_path, end_path_s, end_path_d, prev_size, map);
           
-          next_points = generateTrayectory(lane, ref_vel, egoCar, previous_path_x, previous_path_y, end_path_s, end_path_d, prev_size, map);
-          
-          msgJson["next_x"] = next_points[0];
-          msgJson["next_y"] = next_points[1];
-
+          msgJson["next_x"] = next_vals.x;
+          msgJson["next_y"] = next_vals.y;
+		  /****/
           auto msg = "42[\"control\","+ msgJson.dump()+"]";
 
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);

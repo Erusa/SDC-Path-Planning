@@ -1,9 +1,6 @@
 #ifndef CAR_H
 #define CAR_H
 
-
-#include <math.h>
-#include <string>
 #include <vector>
 
 struct Car{
@@ -14,4 +11,11 @@ struct Car{
   double yaw;
   double speed;
 };
+
+struct SimpleCar{
+  double x;
+  double y;
+  double yaw;
+};
+
 #endif
