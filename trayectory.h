@@ -11,12 +11,12 @@
 
 using std::vector;
 
-Points generateTrayectory(int lane, double ref_vel, Car car, Points previous_path, double end_path_s, double end_path_d, double prev_size, Map map ){
+Points generateTrayectory(int lane, double ref_vel, Car car, Points previous_path, double prev_size, Map map ){
 
 	// create a list of widely spaced (x,y) waypoints, evenly spaced at 30m
   
-    vector<double> ptsx;
-    vector<double> ptsy;
+    Points pts;
+
     // reference x,y, yaw states 
     double ref_x = car.x;
     double ref_y = car.y;
@@ -33,11 +33,11 @@ Points generateTrayectory(int lane, double ref_vel, Car car, Points previous_pat
       double prev_car_x =  car.x - cos(car.yaw);
       double prev_car_y = car.y - sin(car.yaw);
 
-      ptsx.push_back(prev_car_x);
-      ptsx.push_back(car.x);
+      pts.x.push_back(prev_car_x);
+      pts.x.push_back(car.x);
 
-      ptsy.push_back(prev_car_y);
-      ptsy.push_back(car.y);
+      pts.y.push_back(prev_car_y);
+      pts.y.push_back(car.y);
     }
     //use the previous paths and point as starting reference
     else
@@ -52,11 +52,11 @@ Points generateTrayectory(int lane, double ref_vel, Car car, Points previous_pat
       ref_yaw = atan2(ref_y - ref_y_prev, ref_x - ref_x_prev);
 
       //Use two points that make the path tangen to the previous path's end point
-      ptsx.push_back(ref_x_prev);
-      ptsx.push_back(ref_x);
+      pts.x.push_back(ref_x_prev);
+      pts.x.push_back(ref_x);
 
-      ptsy.push_back(ref_y_prev);
-      ptsy.push_back(ref_y);
+      pts.y.push_back(ref_y_prev);
+      pts.y.push_back(ref_y);
     }
 
   	//getLastPoint(car, lane, map, ptsx, ptsy);
@@ -65,30 +65,30 @@ Points generateTrayectory(int lane, double ref_vel, Car car, Points previous_pat
     vector<double> next_wp1 = getXY(car.s+60, (2+4*lane), map.waypoints_s, map.waypoints_x,          map.waypoints_y);
     vector<double> next_wp2 = getXY(car.s+90, (2+4*lane), map.waypoints_s, map.waypoints_x,          map.waypoints_y);
 
-    ptsx.push_back(next_wp0[0]);
-    ptsx.push_back(next_wp1[0]);
-    ptsx.push_back(next_wp2[0]);
+    pts.x.push_back(next_wp0[0]);
+    pts.x.push_back(next_wp1[0]);
+    pts.x.push_back(next_wp2[0]);
 
-    ptsy.push_back(next_wp0[1]);
-    ptsy.push_back(next_wp1[1]);
-    ptsy.push_back(next_wp2[1]);
+    pts.y.push_back(next_wp0[1]);
+    pts.y.push_back(next_wp1[1]);
+    pts.y.push_back(next_wp2[1]);
 
   	//changePointsOrientation(ref_x, ref_y, ref_yaw, ptsx, ptsy);
-    for (int i = 0; i < ptsx.size(); ++i) {
+    for (int i = 0; i < pts.x.size(); ++i) {
 
       //shift car reference angle to 0 degree
-      double shift_x = ptsx[i]- ref_x;
-      double shift_y = ptsy[i]- ref_y;
+      double shift_x = pts.x[i]- ref_x;
+      double shift_y = pts.y[i]- ref_y;
 
-      ptsx[i] = (shift_x*cos(0-ref_yaw)-shift_y*sin(0-ref_yaw));
-      ptsy[i] = (shift_x*sin(0-ref_yaw)+shift_y*cos(0-ref_yaw));
+      pts.x[i] = (shift_x*cos(0-ref_yaw)-shift_y*sin(0-ref_yaw));
+      pts.y[i] = (shift_x*sin(0-ref_yaw)+shift_y*cos(0-ref_yaw));
     }
 
     //create a Spline
     tk::spline s;
 
     //set(x,y) points to the spline
-    s.set_points(ptsx, ptsy);
+    s.set_points(pts.x, pts.y);
 
     //Define the actual(x,y) points we will use for the planner
     Points next_vals;
