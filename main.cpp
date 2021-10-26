@@ -6,7 +6,7 @@
 #include "Eigen-3.3/Eigen/Core"
 #include "Eigen-3.3/Eigen/QR"
 #include "helpers.h"
-#include "trayectory.h"
+#include "trajectory.h"
 //#include "points.h"
 #include "planning.h"
 #include "car.h"
@@ -107,7 +107,6 @@ int main() {
 
           json msgJson;
 
-
           /**
            * TODO: define a path made up of (x,y) points that the car will visit
            *   sequentially every .02 seconds
@@ -117,7 +116,7 @@ int main() {
           
           //Define the actual(x,y) points we will use for the planner
           Points next_vals;
-          next_vals = generateTrayectory(lane, ref_vel, egoCar, previous_path, prev_size, map);
+          next_vals = generateTrajectory(lane, ref_vel, egoCar, previous_path, prev_size, map);
           
           msgJson["next_x"] = next_vals.x;
           msgJson["next_y"] = next_vals.y;
