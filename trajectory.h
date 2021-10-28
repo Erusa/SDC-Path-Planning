@@ -112,7 +112,7 @@ void choosePointsAccordingSpeed_shift2MapReference_getTrajectory(const double re
   
 }
 
-Points generateTrajectory(const int &lane, const double &ref_vel, const Car &car, const Points &previous_path, const double &prev_size, const Map &map ){
+Points generateTrajectory(const CarController &goal, const Car &car, const Points &previous_path, const double &prev_size, const Map &map ){
 
     //Define the actual(x,y) points we will use for the planner
     Points next_vals;
@@ -132,7 +132,7 @@ Points generateTrajectory(const int &lane, const double &ref_vel, const Car &car
     ref.y = car.y;
     ref.yaw = deg2rad(car.yaw);
   
-    choosePoints( lane, car, previous_path, prev_size, map, pts, ref);
+    choosePoints(goal.lane, car, previous_path, prev_size, map, pts, ref);
   	shiftPoints2CarReference(pts, ref);
 	
     //create a Spline
@@ -141,7 +141,7 @@ Points generateTrajectory(const int &lane, const double &ref_vel, const Car &car
     //set(x,y) points to the spline
     s.set_points(pts.x, pts.y);
 
-	choosePointsAccordingSpeed_shift2MapReference_getTrajectory(ref_vel, s, ref, previous_path, next_vals);
+	choosePointsAccordingSpeed_shift2MapReference_getTrajectory(goal.speed, s, ref, previous_path, next_vals);
     
   return next_vals;
 }

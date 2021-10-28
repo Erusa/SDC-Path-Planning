@@ -53,12 +53,13 @@ int main() {
   }
   
   //DONE: defined some variables
-  int lane = 1; //starting on lane 1
+  CarController goal;
+  goal.lane = 1; //starting on lane 1
   //Have a reference velocity to target
-  double ref_vel = 0.0;
+  goal.speed = 0.0;
   
 
-  h.onMessage([&ref_vel, &map,&lane]
+  h.onMessage([&map,&goal]
               (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
@@ -84,6 +85,8 @@ int main() {
           egoCar.d = j[1]["d"];
           egoCar.yaw = j[1]["yaw"];
           egoCar.speed = j[1]["speed"];
+          //egoCar.state = 1;
+          egoCar.lane = ceil(egoCar.d/4);
 
           // Previous path data given to the Planner
           Points previous_path;
@@ -110,13 +113,13 @@ int main() {
           /**
            * TODO: define a path made up of (x,y) points that the car will visit
            *   sequentially every .02 seconds
-           */
-          
-          planAction(prev_size, sensor_fusion, egoCar, end_path_s, ref_vel, lane);
+           */   
+          planAction(prev_size, sensor_fusion, egoCar, end_path_s, goal);
           
           //Define the actual(x,y) points we will use for the planner
           Points next_vals;
-          next_vals = generateTrajectory(lane, ref_vel, egoCar, previous_path, prev_size, map);
+         
+          next_vals = generateTrajectory(goal, egoCar, previous_path, prev_size, map);
           
           msgJson["next_x"] = next_vals.x;
           msgJson["next_y"] = next_vals.y;
