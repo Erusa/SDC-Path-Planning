@@ -86,7 +86,8 @@ int main() {
           egoCar.yaw = j[1]["yaw"];
           egoCar.speed = j[1]["speed"];
           //egoCar.state = 1;
-          egoCar.lane = ceil(egoCar.d/4);
+          //egoCar.lane = ceil(egoCar.d/4);
+          egoCar.lane = goal.lane;
 
           // Previous path data given to the Planner
           Points previous_path;
@@ -114,7 +115,15 @@ int main() {
            * TODO: define a path made up of (x,y) points that the car will visit
            *   sequentially every .02 seconds
            */   
-          planAction(prev_size, sensor_fusion, egoCar, end_path_s, goal);
+          
+          //REVIEW that!  egoCar.x egoCar.y remaind old
+          if(prev_size > 0)
+      	 {
+        	egoCar.s = end_path_s;
+      	 }
+          
+         goal = choose_next_state(egoCar, sensor_fusion, goal, prev_size);
+         //planAction(prev_size, sensor_fusion, egoCar, end_path_s, goal);
           
           //Define the actual(x,y) points we will use for the planner
           Points next_vals;

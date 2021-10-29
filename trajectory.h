@@ -19,7 +19,6 @@ void choosePoints(const int &lane, const Car &car, const Points &previous_path, 
     if(prev_size<2)
     {
       //Use two points that make the path tangent to the car
-      // get2PointsFromCar(car, ptsx, ptsy);
       double prev_car_x =  car.x - cos(car.yaw);
       double prev_car_y = car.y - sin(car.yaw);
 
@@ -32,7 +31,6 @@ void choosePoints(const int &lane, const Car &car, const Points &previous_path, 
     //use the previous paths and point as starting reference
     else
     {
-      //get2PointsFromPath(previous_path_x, previous_path_x, ref_x, ref_y, ref_yaw, ptsx, ptsy);
       //redefine reference state as previous path and point
       ref.x = previous_path.x[prev_size - 1];
       ref.y = previous_path.y[prev_size - 1];
