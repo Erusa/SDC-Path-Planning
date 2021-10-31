@@ -5,6 +5,7 @@
 #include <vector>
 #include "Eigen-3.3/Eigen/Core"
 #include "Eigen-3.3/Eigen/QR"
+#include <math.h>
 #include "helpers.h"
 #include "trajectory.h"
 //#include "points.h"
@@ -17,6 +18,8 @@
 // for convenience
 using nlohmann::json;
 using std::string;
+using std::cout;
+using std::endl;
 using std::vector;
 
 int main() {
@@ -58,8 +61,11 @@ int main() {
   //Have a reference velocity to target
   goal.speed = 0.0;
   
+  Car egoCar;
+  egoCar.state = "CS";
+  egoCar.lane = goal.lane;
 
-  h.onMessage([&map,&goal]
+  h.onMessage([&map,&goal, &egoCar]
               (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
@@ -78,16 +84,17 @@ int main() {
           // j[1] is the data JSON object
           
           // Main car's localization Data
-          Car egoCar;
+          
           egoCar.x = j[1]["x"];
           egoCar.y = j[1]["y"];
           egoCar.s = j[1]["s"];
           egoCar.d = j[1]["d"];
           egoCar.yaw = j[1]["yaw"];
+          egoCar.yaw = deg2rad(egoCar.yaw);
           egoCar.speed = j[1]["speed"];
+          //cout << "***car speed in mph?: "<<egoCar.speed<< endl;
           //egoCar.state = 1;
-          //egoCar.lane = ceil(egoCar.d/4);
-          egoCar.lane = goal.lane;
+          egoCar.lane = ceil(egoCar.d/4 - 1);
 
           // Previous path data given to the Planner
           Points previous_path;
@@ -117,18 +124,21 @@ int main() {
            */   
           
           //REVIEW that!  egoCar.x egoCar.y remaind old
-          if(prev_size > 0)
+          /*if(prev_size > 0)
       	 {
         	egoCar.s = end_path_s;
-      	 }
-          
+      	 }*/
+         cout << " *** CAR STATE: "<<egoCar.state << ", car lane: "<<egoCar.lane;
          goal = choose_next_state(egoCar, sensor_fusion, goal, prev_size);
+         cout << " goal new state "<<egoCar.state << endl; 
+         
+
          //planAction(prev_size, sensor_fusion, egoCar, end_path_s, goal);
           
           //Define the actual(x,y) points we will use for the planner
           Points next_vals;
          
-          next_vals = generateTrajectory(goal, egoCar, previous_path, prev_size, map);
+          next_vals = generateTrajectory(goal, egoCar, previous_path, prev_size, map,end_path_s);
           
           msgJson["next_x"] = next_vals.x;
           msgJson["next_y"] = next_vals.y;

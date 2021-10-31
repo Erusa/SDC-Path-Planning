@@ -19,6 +19,7 @@ struct SimpleCar{
   double x;
   double y;
   double yaw;
+  double s;
 };
 
 struct CarController{

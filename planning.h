@@ -16,8 +16,8 @@ using std::vector;
 
 // 1m/s =mph/2.24
 int lanes_available = 3;
-double max_vel = 49.5; //max speed = 50mph --> 25m/s
-double max_var_vel = 0.224; // 5m/s2 --> 5*2.24 = 11.2 mph --> 11.2*50times/s = 5m/s
+double max_vel = 22; //49.5 //max speed = 50mph --> 22.3m/s
+double max_var_vel = 0.1;//0.224; // 5m/s2 --> 5*2.24 = 11.2 mph --> 11.2*50times/s = 5m/s
 // T =0.02s
 
 void planAction(const int &prev_size, const vector< vector<double> > &sensor_fusion, Car &egoCar, CarController &goal ){
@@ -82,7 +82,10 @@ vector<string> successor_states(Car &car) {
     	cout<< "add state LCL" <<endl;
     }
   }
-    
+  else if (car.state.compare("CS") != 0)
+   {
+   		states.push_back(car.state); 
+   }
   // If state is "LCL" or "LCR", then just return "KL"
   return states;
 }
@@ -98,16 +101,17 @@ CarController constant_speed_trajectory(const CarController &old_goal){
 	return goal;
 }
 
-CarController keep_lane_trajectory(const CarController &old_goal, const Car &egoCar, const vector< vector<double> > &sensor_fusion, const int &prev_size){
-  CarController goal = old_goal;
+double change_speed(const CarController &goal, const Car &egoCar, const vector< vector<double> > &sensor_fusion, const int &prev_size){
 
+	double car_s = egoCar.s + prev_size*0.02*goal.speed - 0.5*prev_size*0.02*0.02*prev_size*max_var_vel;
+  
     bool too_close = false;
 
     //find ref_v to use
     for(int i=0; i<sensor_fusion.size(); ++i){
       //car is in my lane
       float d = sensor_fusion[i][6];
-      if(d < (2+4*old_goal.lane+2) && d > (2+4*old_goal.lane-2))
+      if(d < (2+4*goal.lane+2) && d > (2+4*goal.lane-2))
       {
         double vx = sensor_fusion[i][3];
         double vy = sensor_fusion[i][4];
@@ -117,35 +121,51 @@ CarController keep_lane_trajectory(const CarController &old_goal, const Car &ego
         // predict car position
         check_car_s += (double)prev_size* 0.02*check_speed; //if using previous points can project s value out
         //check s values greater than mine and s gap
-        if((check_car_s > egoCar.s) && (check_car_s - egoCar.s < 30))
+        if((check_car_s > car_s) && (check_car_s - car_s < 25))
         {
           //do some logic here, lower reference velocity so we dont crash into the car infrot of us
           too_close=true;
         }
       }
     }
-
+// approach: it shouldnt be car.speed? --> it is actually the same
+  	//speed = goal.speed;
+   double speed = goal.speed;
+  
     if (too_close)
     {
-      goal.speed -= max_var_vel;
-      if (old_goal.speed<0) {goal.speed=0;}
+      speed -= max_var_vel;
+      cout << "breaking" << endl;
+      if (speed<0) {speed=0;}
     }
   
-    else if (old_goal.speed <max_vel){
-      goal.speed += max_var_vel;
+    else if (speed <max_vel){
+      speed += max_var_vel;
     }
   
-	return goal;
+	return speed;
 }
-CarController lane_change_trajectory_left(const CarController &old_goal, const Car &car, const vector< vector<double> > &sensor_fusion){
+
+CarController keep_lane_trajectory(const CarController &old_goal, const Car &car, const vector< vector<double> > &sensor_fusion, const int &prev_size){
   CarController goal=old_goal;
+  
+  goal.lane = car.lane;
+  goal.speed = change_speed(goal, car, sensor_fusion, prev_size);
+  return goal;
+}
+CarController lane_change_trajectory_left(const CarController &old_goal, const Car &car, const vector< vector<double> > &sensor_fusion, const int &prev_size){
+  CarController goal=old_goal;
+  
   goal.lane = (car.lane ==0 ? 99 : (car.lane-1)); 
+  goal.speed = change_speed(goal, car, sensor_fusion, prev_size);
 	return goal;
 }
              
-CarController lane_change_trajectory_right(const CarController &old_goal, const Car &car,  const vector< vector<double> > &sensor_fusion){
+CarController lane_change_trajectory_right(const CarController &old_goal, const Car &car,  const vector< vector<double> > &sensor_fusion, const int &prev_size){
   CarController goal = old_goal;
+  
   goal.lane = (car.lane ==(lanes_available-1) ? 99 : (car.lane+1)); 
+  goal.speed = change_speed(goal, car, sensor_fusion, prev_size);
   return goal;
 }
 /*CarController prep_lane_change_trajectory(const CarController &goal,const string &state, const vector< vector<double> > &sensor_fusion){
@@ -161,16 +181,16 @@ CarController generate_goal(Car& car, const CarController &old_goal, const strin
     goal = constant_speed_trajectory(old_goal);
   } 
   else if (state.compare("KL") == 0) {
-    cout<< "computing goal when KL" <<endl;
+    //cout<< "computing goal when KL" <<endl;
     goal = keep_lane_trajectory(old_goal, car, sensor_fusion, prev_size);
   } 
   else if (state.compare("LCL") == 0) {
-    cout<< "computing goal when LCL" <<endl;
-    goal = lane_change_trajectory_left(old_goal, car, sensor_fusion);
+    //cout<< "computing goal when LCL" <<endl;
+    goal = lane_change_trajectory_left(old_goal, car, sensor_fusion, prev_size);
   } 
   else if (state.compare("LCR") == 0) {
-    goal = lane_change_trajectory_right(old_goal, car, sensor_fusion);
-    cout<< "computing goal when LCR" <<endl;
+    goal = lane_change_trajectory_right(old_goal, car, sensor_fusion, prev_size);
+    //cout<< "computing goal when LCR" <<endl;
   }
   //car.lane = goal.lane;
   return goal;
@@ -206,6 +226,7 @@ CarController choose_next_state(Car &car, const vector< vector<double> > &sensor
   /**
    * TODO: Change return value here:
    */
+  cout << "speed: " << final_goals[best_idx].speed << ", speed from car: " << car.speed <<endl;
   return final_goals[best_idx];
 }
 
