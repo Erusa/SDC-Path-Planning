@@ -47,7 +47,6 @@ void choosePoints(const int &lane, SimpleCar &refCar, const Points &previous_pat
       pts.y.push_back(refCar.y);
     }
 
-  	//getLastPoint(car, lane, map, ptsx, ptsy);
     //In Frenet add evenly 30m spaced points ahead of the starting reference
     vector<double> next_wp0 = getXY(refCar.s+30, (2+4*lane), map.waypoints_s, map.waypoints_x,          map.waypoints_y);
     vector<double> next_wp1 = getXY(refCar.s+60, (2+4*lane), map.waypoints_s, map.waypoints_x,          map.waypoints_y);
@@ -56,8 +55,6 @@ void choosePoints(const int &lane, SimpleCar &refCar, const Points &previous_pat
     pts.x.push_back(next_wp0[0]);
     pts.x.push_back(next_wp1[0]);
     pts.x.push_back(next_wp2[0]);
-    //cout<<"p4:"<< next_wp1[0]<<endl;
-  	//cout<<"p5:"<< next_wp2[0]<<endl;
 
     pts.y.push_back(next_wp0[1]);
     pts.y.push_back(next_wp1[1]);
@@ -73,7 +70,6 @@ void shiftPoints2CarReference(Points &pts, const SimpleCar &ref){
 
       pts.x[i] = (shift_x*cos(0-ref.yaw)-shift_y*sin(0-ref.yaw));
       pts.y[i] = (shift_x*sin(0-ref.yaw)+shift_y*cos(0-ref.yaw));
-      //cout<<"px:"<< pts.x[i]<<endl;
     }
 }
 
@@ -88,11 +84,9 @@ void choosePointsAccordingSpeed_shift2MapReference_getTrajectory(const double re
     //fill up the rest of our path planner after filling it with previos points, here we will always output 50 points
     //Approach: here change of acceleration can also be written. Here woud be better
     for (int i =1; i<= 50 - previous_path.x.size(); ++i){
-      //double N = target_dist/(0.02*ref_vel/2.24);
       double N = target_dist/(0.02*ref_vel);
       double x_point = x_add_on + target_x/N;
       double y_point = s(x_point);
-      //cout<<"ps:"<< y_point <<endl;
 
       x_add_on = x_point;
       double x_ref = x_point;
@@ -108,12 +102,10 @@ void choosePointsAccordingSpeed_shift2MapReference_getTrajectory(const double re
       next_vals.x.push_back(x_point);
       next_vals.y.push_back(y_point);
     }
-  
 }
 
 Points generateTrajectory(const CarController &goal, const Car &car, const Points &previous_path, const double &prev_size, const Map &map, const double &end_path_s){
 
-  
     //Define the actual(x,y) points we will use for the planner
     Points next_vals;
   
@@ -123,7 +115,7 @@ Points generateTrajectory(const CarController &goal, const Car &car, const Point
       next_vals.y.push_back(previous_path.y[i]);
     }
   
-  	//change last position to end of the path
+  	//change last position of ego car, to be the end of the path
   	SimpleCar refCar;
   	refCar.s = car.s;
     refCar.yaw = car.yaw;
@@ -137,12 +129,6 @@ Points generateTrajectory(const CarController &goal, const Car &car, const Point
   
 	// create a list of widely spaced (x,y) waypoints, evenly spaced at 30m
     Points pts;
-
-    // reference x,y, yaw states 
-  	/*SimpleCar ref;
-    ref.x = car.x;
-    ref.y = car.y;
-    ref.yaw = deg2rad(car.yaw);*/
   
     choosePoints(goal.lane, refCar, previous_path, prev_size, map, pts);
   	shiftPoints2CarReference(pts, refCar);

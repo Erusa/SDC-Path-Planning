@@ -17,8 +17,6 @@ const float COLLISION = 500; //1000
 const float SPEED_LIMIT = 100;
 const float SPEED = 10;
 const float CHANGE = 10; //1
-//const float REACH_GOAL = pow(10, 6);
-//const float EFFICIENCY = pow(10, 5);
 
 extern double max_vel;
 extern double max_var_vel; 
@@ -80,9 +78,10 @@ float change_cost(const CarController& goal,  const Car &egoCar){ //max = 10
 	return cost;
 }*/
 
+/*
 float outsideroad_cost(const CarController& goal, const Car &egoCar){
 	float cost =  goal.lane;
-}
+}*/
 
 float calculate_cost(const CarController& goal, const vector< vector<double> > &sensor_fusion, const Car &car, const int &prev_size){
   float cost = collision_cost(goal,sensor_fusion, car, prev_size);
