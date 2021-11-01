@@ -10,6 +10,10 @@ My own Project from SDC Udacity Course (Project 7). This code programs the car t
 3. cost.h  ---> calculate cost of collision, change line, and speed
 4. car.h, points.h and map.h --> contain simple structures to improve readability of the code
 
+<p float="left">
+<img src="./Picture.png" width="1000" height="600">
+</p>
+
 ## planning.h ##
 CarController choose_next_state(Car &car, const vector< vector<double> > &sensor_fusion, CarController &old_goal, const int &prev_size)
 1. Succesor states are calculate  -->*successor_states(car)*
