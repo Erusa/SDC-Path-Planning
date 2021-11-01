@@ -1,6 +1,8 @@
 # SDC-Path-Planning
 My own Project from SDC Udacity Course (Project 7). This code programs the car to accelerate or change lines depending on cars nearby
 
+**See video-pathplanning.mp4!**
+
 *Simulator Requirement: Car is controlled by giving the point where it should be at certain time. From here, speed and accelaration are deduced.*
 
 0. main.h --> main function which connects the car online
